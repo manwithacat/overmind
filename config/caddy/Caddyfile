@@ -1,0 +1,23 @@
+{
+    # Use self-signed certs for local PoC
+    local_certs
+}
+
+localhost {
+    tls internal
+
+    # JMAP / Stalwart web interface
+    handle /mail/* {
+        reverse_proxy stalwart:8080
+    }
+
+    # Intelligence API
+    handle /api/* {
+        reverse_proxy api:8000
+    }
+
+    # Default: Stalwart web interface
+    handle {
+        reverse_proxy stalwart:8080
+    }
+}
