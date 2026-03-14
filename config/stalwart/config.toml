@@ -1,0 +1,84 @@
+# Stalwart Mail Server v0.10 configuration
+# Overmind PoC — local development instance
+
+###############################################################################
+# Server hostname & domain
+###############################################################################
+[server]
+hostname = "mail.overmind.local"
+
+###############################################################################
+# Listeners
+###############################################################################
+
+[server.listener."smtp"]
+bind = ["[::]:25"]
+protocol = "smtp"
+
+[server.listener."submission"]
+bind = ["[::]:587"]
+protocol = "smtp"
+
+[server.listener."imaptls"]
+bind = ["[::]:993"]
+protocol = "imap"
+tls.implicit = true
+
+[server.listener."http"]
+bind = ["[::]:8080"]
+protocol = "http"
+
+###############################################################################
+# Storage — RocksDB for data/fts/lookup, filesystem for blobs
+###############################################################################
+
+[storage]
+data = "rocksdb"
+fts = "rocksdb"
+blob = "fs"
+lookup = "rocksdb"
+directory = "internal"
+
+[store."rocksdb"]
+type = "rocksdb"
+path = "%{env:STALWART_PATH}%/data"
+compression = "lz4"
+
+[store."fs"]
+type = "fs"
+path = "%{env:STALWART_PATH}%/blobs"
+depth = 2
+
+[directory."internal"]
+type = "internal"
+store = "rocksdb"
+
+###############################################################################
+# Fallback admin account (credentials from environment)
+###############################################################################
+
+[authentication.fallback-admin]
+user = "%{env:ADMIN_USER}%"
+secret = "%{env:ADMIN_SECRET}%"
+
+###############################################################################
+# Webhook — notify mail-bridge on message ingest
+###############################################################################
+
+[webhook."nats-bridge"]
+url = "http://mail-bridge:8025/webhook"
+events = ["store.ingest"]
+timeout = "30s"
+throttle = "1s"
+allow-invalid-certs = true
+lossy = true
+
+###############################################################################
+# Tracing
+###############################################################################
+
+[tracer."stdout"]
+type = "stdout"
+level = "info"
+ansi = false
+enable = true
