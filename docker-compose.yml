@@ -1,0 +1,84 @@
+services:
+  # === Infrastructure Services ===
+
+  stalwart:
+    image: stalwartlabs/mail-server:v0.10
+    ports:
+      - "25:25"
+      - "587:587"
+      - "993:993"
+      - "8080:8080"
+    volumes:
+      - stalwart-data:/opt/stalwart-mail
+      - ./config/stalwart:/opt/stalwart-mail/etc:ro
+    environment:
+      - STALWART_ADMIN_USER=${STALWART_ADMIN_USER}
+      - STALWART_ADMIN_PASSWORD=${STALWART_ADMIN_PASSWORD}
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "587"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - overmind-net
+
+  nats:
+    image: nats:2.10
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats-data:/data
+      - ./config/nats/nats-server.conf:/etc/nats/nats-server.conf:ro
+    command: ["-c", "/etc/nats/nats-server.conf"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - overmind-net
+
+  postgres:
+    build: ./config/postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - overmind-net
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      stalwart:
+        condition: service_healthy
+    networks:
+      - overmind-net
+
+  # === Application Services (added in subsequent chunks) ===
+  # mail-bridge, ingestion, classifier, graph-writer, api, seed
+
+networks:
+  overmind-net:
+    driver: bridge
+
+volumes:
+  stalwart-data:
+  postgres-data:
+  nats-data:
