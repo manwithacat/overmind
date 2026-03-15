@@ -52,3 +52,33 @@ def test_parse_eml_missing_date_defaults_to_utc_now():
     )
     msg = parse_eml(eml)
     assert msg.received_at.tzinfo is not None
+
+
+def test_parse_eml_extracts_fields():
+    from pathlib import Path
+
+    from overmind_ingestion.parser import parse_eml
+
+    eml_path = Path(__file__).parent / "fixtures" / "sample.eml"
+    raw = eml_path.read_bytes()
+    result = parse_eml(raw)
+
+    assert result.sender == "alice@overmind.local"
+    assert "bob@overmind.local" in result.recipients
+    assert "carol@overmind.local" in result.recipients
+    assert result.subject == "Q3 Budget Review"
+    assert result.message_id == "<budget-review-001@overmind.local>"
+    assert result.thread_id == "<budget-thread-001@overmind.local>"
+    assert "<html>" not in result.body_text  # HTML stripped
+    assert "Q3 budget proposal" in result.body_text
+    assert result.has_attachments is False
+    assert result.bcc_count == 0
+
+
+def test_parse_eml_truncates_long_body():
+    from overmind_ingestion.parser import parse_eml
+
+    long_body = "word " * 10000
+    eml = f"From: a@b.com\nTo: c@d.com\nSubject: Long\nMessage-ID: <long@test>\n\n{long_body}"
+    result = parse_eml(eml.encode())
+    assert len(result.body_text) < len(long_body)

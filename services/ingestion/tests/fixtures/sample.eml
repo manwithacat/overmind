@@ -1,0 +1,11 @@
+From: alice@overmind.local
+To: bob@overmind.local
+Cc: carol@overmind.local
+Subject: Q3 Budget Review
+Date: Fri, 14 Mar 2026 10:30:00 +0000
+Message-ID: <budget-review-001@overmind.local>
+In-Reply-To: <budget-thread-001@overmind.local>
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+
+<html><body><p>Hi Bob,</p><p>Please review the <b>Q3 budget proposal</b> attached. We need sign-off by Friday.</p><p>Thanks,<br/>Alice</p></body></html>
