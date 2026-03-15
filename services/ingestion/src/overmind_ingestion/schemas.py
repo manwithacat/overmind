@@ -13,8 +13,8 @@ class MessageDirection(str, Enum):
 class NormalisedMessage(BaseModel):
     message_id: str
     thread_id: str | None
-    sender: EmailStr
-    recipients: list[EmailStr]
+    sender: str
+    recipients: list[str]
     bcc_count: int
     subject: str
     body_text: str
