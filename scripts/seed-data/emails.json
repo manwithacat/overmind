@@ -1,0 +1,149 @@
+[
+  {
+    "category": "decision",
+    "from": "alice@overmind.local",
+    "to": "bob@overmind.local",
+    "cc": "carol@overmind.local",
+    "subject": "Approved: Q3 Infrastructure Budget Increase",
+    "body": "Bob, Carol,\n\nAfter reviewing the proposal you both submitted last Friday, I'm approving the additional £45,000 for the Q3 infrastructure expansion. This covers the new GPU cluster nodes and the additional storage arrays.\n\nPlease proceed with procurement through the usual channels. I've already notified Finance to expect the requisitions.\n\nKey conditions:\n- All hardware must be ordered by end of July to hit our September deployment target\n- Carol, please ensure the rack space allocation is confirmed with the data centre by next week\n- Monthly spend reports to be included in the existing ops review\n\nLet me know if anything changes on the timeline.\n\nBest,\nAlice"
+  },
+  {
+    "category": "decision",
+    "from": "alice@overmind.local",
+    "to": "dave@overmind.local",
+    "cc": "bob@overmind.local",
+    "subject": "Decision: Project Meridian moves to Phase 2",
+    "body": "Dave,\n\nBased on the Phase 1 retrospective and the customer feedback data you presented on Wednesday, I'm giving the green light to move Project Meridian into Phase 2.\n\nKey decisions:\n1. We will pursue the self-hosted deployment model as the primary offering\n2. The SaaS variant is deferred to Phase 3 pending further market analysis\n3. Dave, you have authority to expand the team by two engineers — coordinate with Frank on hiring\n\nBob has agreed to allocate Carol's infrastructure team for the deployment tooling work starting August 1st.\n\nPlease update the project plan and circulate the revised timeline by Friday.\n\nAlice"
+  },
+  {
+    "category": "decision",
+    "from": "bob@overmind.local",
+    "to": "eve@overmind.local",
+    "cc": "carol@overmind.local",
+    "subject": "Re: RFC — Message Queue Migration",
+    "body": "Eve,\n\nI've reviewed your RFC on migrating from RabbitMQ to NATS JetStream. Strong proposal — the latency benchmarks are convincing, and the operational simplicity argument is well made.\n\nDecision: approved. Let's proceed with the migration plan you outlined in section 4.\n\nTimeline adjustment: I'd like the staging environment cutover done by August 15th rather than September 1st, so we have a full month of soak testing before production.\n\nCarol — please coordinate with Eve on the infrastructure side. We'll need the new NATS cluster provisioned in staging by end of next week.\n\nGood work on this, Eve.\n\nBob"
+  },
+  {
+    "category": "request",
+    "from": "dave@overmind.local",
+    "to": "eve@overmind.local",
+    "subject": "Can you review the API spec for the analytics endpoint?",
+    "body": "Hi Eve,\n\nI've just pushed the updated OpenAPI spec for the analytics dashboard endpoints to the shared repo. Could you review it when you get a chance? Specifically I'd appreciate your input on:\n\n1. The pagination approach for the /metrics/timeline endpoint — I went with cursor-based but open to alternatives\n2. Whether the response schema for /relationships/graph is flexible enough for the visualisation layer\n3. Rate limiting headers — I followed the IETF draft standard but want to make sure it works with our client SDK\n\nNo huge rush, but it would be great to have your comments by Thursday so I can incorporate feedback before the sprint review.\n\nThanks,\nDave"
+  },
+  {
+    "category": "request",
+    "from": "carol@overmind.local",
+    "to": "bob@overmind.local",
+    "subject": "Need sign-off on disaster recovery test schedule",
+    "body": "Bob,\n\nI've drafted the Q3 disaster recovery test schedule. We're planning to run the following scenarios:\n\n- Full database failover (PostgreSQL streaming replication)\n- NATS cluster partition recovery\n- Object storage failover (MinIO erasure coding verification)\n- Complete site evacuation drill\n\nProposed dates are the last weekend of each month (July 26-27, Aug 30-31, Sep 27-28). Each test window is Saturday 02:00–06:00 UTC.\n\nCan you review and sign off? I also need to know if you want to be on the bridge call for the site evacuation drill or if you're happy to delegate that to me.\n\nCarol"
+  },
+  {
+    "category": "request",
+    "from": "frank@overmind.local",
+    "to": "carol@overmind.local",
+    "cc": "bob@overmind.local",
+    "subject": "Interview panel request — Senior SRE role",
+    "body": "Hi Carol,\n\nWe've shortlisted three candidates for the Senior SRE position. I'd like to schedule technical interviews for the week of July 14th.\n\nCould you or someone from your infrastructure team join as a technical panellist? Each interview is 60 minutes — I'm thinking a 30-minute systems design exercise followed by a 30-minute discussion of their operational experience.\n\nI'll send calendar invites once you confirm availability. The candidates are strong — two have extensive Kubernetes experience and one comes from a NATS-heavy background which could be very relevant.\n\nThanks,\nFrank"
+  },
+  {
+    "category": "request",
+    "from": "eve@overmind.local",
+    "to": "dave@overmind.local",
+    "subject": "Meeting request: Pipeline architecture walkthrough",
+    "body": "Hi Dave,\n\nI'm starting work on the ingestion pipeline integration tests next week and I want to make sure I fully understand the expected message flow from your product requirements perspective.\n\nCould we block out 45 minutes sometime Tuesday or Wednesday? I'd like to walk through:\n\n- The normalisation rules for each message source\n- Edge cases around multi-part MIME messages and inline attachments\n- The expected behaviour when LLM classification confidence is below threshold\n\nI'll prepare a sequence diagram beforehand so we have something concrete to discuss.\n\nCheers,\nEve"
+  },
+  {
+    "category": "status_update",
+    "from": "eve@overmind.local",
+    "to": "carol@overmind.local",
+    "cc": "bob@overmind.local",
+    "subject": "Weekly Update: Ingestion Pipeline — Week 28",
+    "body": "Hi Carol,\n\nWeekly update on the ingestion pipeline:\n\nCompleted this week:\n- Implemented MIME parsing for multipart/alternative and multipart/mixed messages\n- Added header normalisation for the 12 most common MTA variations we identified\n- Unit test coverage is now at 87% for the parsing module\n- Resolved the encoding issue with ISO-8859-1 messages that was causing failures in staging\n\nIn progress:\n- Integration tests with the NATS consumer (blocked on staging cluster — see below)\n- Celery task retry logic for transient SMTP lookup failures\n\nBlockers:\n- The staging NATS cluster is still showing intermittent connection resets. I've opened an issue (#247) with reproduction steps. Could use some help from the infra side.\n\nNext week:\n- Complete integration tests once NATS is stable\n- Begin work on the classification output writer (PostgreSQL + AGE)\n\nEve"
+  },
+  {
+    "category": "status_update",
+    "from": "dave@overmind.local",
+    "to": "alice@overmind.local",
+    "cc": "bob@overmind.local",
+    "subject": "Project Meridian — Phase 1 Status Report",
+    "body": "Alice,\n\nHere's the Phase 1 status summary for Project Meridian as of end of week 6:\n\nOverall status: GREEN\n\nMilestones:\n- Mail server deployment: COMPLETE (Stalwart running in production config)\n- DNS and TLS configuration: COMPLETE (DKIM, SPF, DMARC all passing)\n- IMAP/JMAP client access: COMPLETE (tested with Roundcube and Thunderbird)\n- User provisioning: COMPLETE (LDAP integration working, 6 pilot users onboarded)\n- Monitoring and alerting: IN PROGRESS (Prometheus metrics exposed, Grafana dashboards 80% done)\n\nBudget: On track. £12,400 of £15,000 Phase 1 budget committed.\n\nRisks:\n1. The Grafana dashboard work is taking longer than estimated due to custom panel development. Low impact — will complete in week 7.\n2. No risks to Phase 2 start date.\n\nRecommendation: Proceed to Phase 2 as planned.\n\nDave"
+  },
+  {
+    "category": "status_update",
+    "from": "carol@overmind.local",
+    "to": "bob@overmind.local",
+    "subject": "Infrastructure capacity review — July",
+    "body": "Bob,\n\nMonthly infrastructure capacity review:\n\nCompute:\n- Current utilisation: 62% across the cluster (up from 54% last month)\n- The new Ollama inference workers are consuming more GPU memory than projected — we're at 78% GPU utilisation vs. the 60% estimate\n- Recommendation: Bring forward the GPU node procurement from Q4 to Q3\n\nStorage:\n- MinIO cluster: 4.2 TB used of 12 TB available (35%)\n- PostgreSQL: 180 GB used, growing at ~8 GB/week\n- At current growth rate, we have 18 months of headroom on storage\n\nNetwork:\n- NATS JetStream throughput peaked at 12,000 msg/sec during Tuesday's load test\n- No bottlenecks identified at current scale\n- The inter-node latency issue on rack 3 was resolved by replacing the faulty switch module\n\nAction items for your review:\n1. Approve early GPU procurement (estimated £28,000)\n2. Confirm whether we should provision additional NATS nodes for the Phase 2 workload\n\nCarol"
+  },
+  {
+    "category": "status_update",
+    "from": "bob@overmind.local",
+    "to": "alice@overmind.local",
+    "subject": "CTO Weekly Brief — Week 28",
+    "body": "Alice,\n\nQuick summary of the week from the engineering side:\n\nHighlights:\n- Project Meridian Phase 1 officially complete. Dave's full report is in your inbox.\n- Eve's ingestion pipeline is progressing well — MIME parsing is solid, classification integration starts next week.\n- Successfully ran a 10,000 message load test through the full pipeline. Average end-to-end latency was 340ms which is well within our 500ms target.\n\nConcerns:\n- GPU utilisation is higher than projected. Carol is recommending we pull forward the Q4 hardware purchase. I agree — I'll send you a formal request next week.\n- We need to finalise the LLM model selection. Mistral 7B is performing well but I want to benchmark Llama 3 8B before we commit. Eve is running comparisons this week.\n\nUpcoming:\n- Phase 2 kickoff meeting scheduled for Monday July 7th\n- DR test planning underway (Carol leading)\n\nBob"
+  },
+  {
+    "category": "broadcast",
+    "from": "alice@overmind.local",
+    "to": "all-staff@overmind.local",
+    "subject": "Company Update: Q2 Results and H2 Priorities",
+    "body": "Team,\n\nI wanted to share a brief update on where we stand as we head into the second half of the year.\n\nQ2 highlights:\n- Project Meridian Phase 1 delivered on time and under budget — huge credit to the engineering and infrastructure teams\n- We've onboarded our first three pilot organisations for early access testing\n- Revenue is tracking 8% ahead of plan\n\nH2 priorities:\n1. Complete Project Meridian Phases 2 and 3 — this remains our top priority\n2. Achieve SOC 2 Type I certification by end of Q4\n3. Expand the team — we have four open positions across engineering and operations\n\nI'll be hosting an all-hands on Friday July 11th at 14:00 to go into more detail. Calendar invite to follow.\n\nThank you all for the hard work this quarter.\n\nAlice"
+  },
+  {
+    "category": "broadcast",
+    "from": "frank@overmind.local",
+    "to": "all-staff@overmind.local",
+    "subject": "Updated Remote Working Policy — Effective August 1st",
+    "body": "Hi everyone,\n\nFollowing the consultation period last month, I'm pleased to confirm the updated remote working policy, effective August 1st.\n\nKey changes:\n- Core collaboration hours are now 10:00–15:00 UK time (reduced from 09:00–16:00)\n- The monthly in-office day moves from the first Monday to the first Thursday of each month\n- Equipment allowance for home office setup increased to £500 per year (up from £350)\n- New: up to 4 weeks per year of working from an approved international location\n\nThe full policy document is available on the internal wiki. If you have questions, please reach out to me or drop them in the #hr-questions channel.\n\nFrank"
+  },
+  {
+    "category": "broadcast",
+    "from": "bob@overmind.local",
+    "to": "all-staff@overmind.local",
+    "subject": "Scheduled maintenance window — Saturday July 5th",
+    "body": "Hi all,\n\nA heads-up that we have a scheduled maintenance window this Saturday, July 5th, from 02:00 to 06:00 UTC.\n\nWhat's happening:\n- PostgreSQL major version upgrade (15 to 16) on the intelligence store\n- NATS JetStream cluster rolling restart for configuration updates\n- TLS certificate rotation on all public-facing services\n\nExpected impact:\n- The analytics dashboard will be unavailable during the maintenance window\n- Email delivery will continue to function — Stalwart operates independently\n- NATS consumers will experience brief reconnection events (< 30 seconds each)\n\nNo action required from your side. I'll send a confirmation once everything is complete.\n\nBob"
+  },
+  {
+    "category": "acknowledgement",
+    "from": "bob@overmind.local",
+    "to": "carol@overmind.local",
+    "subject": "Re: Infrastructure capacity review — July",
+    "body": "Carol,\n\nThanks for the thorough review. Noted on all points.\n\nOn the GPU procurement — agreed, let's bring that forward. I'll include it in my budget request to Alice next week. Please get preliminary quotes from our two approved vendors so I have numbers ready.\n\nOn the additional NATS nodes — let's hold off until we have the Phase 2 load projections from Dave. I expect those by end of next week.\n\nGood work resolving the rack 3 switch issue quickly.\n\nBob"
+  },
+  {
+    "category": "acknowledgement",
+    "from": "dave@overmind.local",
+    "to": "eve@overmind.local",
+    "subject": "Re: Can you review the API spec for the analytics endpoint?",
+    "body": "Eve,\n\nThanks for the detailed review comments — really helpful. I've addressed all of them:\n\n1. Cursor-based pagination: keeping as-is per your recommendation. Added the X-Cursor-Next header as you suggested.\n2. Graph response schema: restructured to use adjacency list format. Much cleaner for the frontend.\n3. Rate limiting: switched to the RateLimit-* headers per the latest IETF draft. Good catch on the Retry-After inconsistency.\n\nUpdated spec is pushed. Take a quick look when you can to confirm I haven't misunderstood anything.\n\nCheers,\nDave"
+  },
+  {
+    "category": "acknowledgement",
+    "from": "alice@overmind.local",
+    "to": "dave@overmind.local",
+    "subject": "Re: Project Meridian — Phase 1 Status Report",
+    "body": "Dave,\n\nExcellent report, thank you. Very pleased to see Phase 1 delivered under budget.\n\nI've reviewed the numbers and the risk register. Agree with your recommendation to proceed to Phase 2. The Grafana work rolling into week 7 is fine — not a blocker.\n\nPlease make sure the Phase 2 kickoff deck includes the pilot organisation feedback. I'd like the team to hear directly what's working and where the gaps are.\n\nWell done to you and the whole team.\n\nAlice"
+  },
+  {
+    "category": "social",
+    "from": "frank@overmind.local",
+    "to": "all-staff@overmind.local",
+    "subject": "Welcome Priya Sharma — joining Engineering next Monday!",
+    "body": "Hi everyone,\n\nI'm delighted to announce that Priya Sharma will be joining us next Monday, July 7th, as a Backend Engineer on the ingestion pipeline team.\n\nPriya comes to us from Dataflow Systems where she spent three years building high-throughput event processing pipelines. She has deep experience with Python, PostgreSQL, and message queue systems — a perfect fit for our stack.\n\nShe'll be sitting with Eve's team and her onboarding buddy is Dave.\n\nPlease give Priya a warm welcome when you see her. I know she's excited to get started.\n\nFrank"
+  },
+  {
+    "category": "social",
+    "from": "carol@overmind.local",
+    "to": "all-staff@overmind.local",
+    "subject": "Team lunch — Friday July 4th to celebrate Phase 1!",
+    "body": "Hi all,\n\nTo celebrate the successful delivery of Project Meridian Phase 1, we're organising a team lunch this Friday at The Engineer's Arms (the pub around the corner, not an actual engineer's arms).\n\nDetails:\n- When: Friday July 4th, 12:30\n- Where: The Engineer's Arms, 14 Station Road\n- What: Lunch is on the company\n\nPlease let me know by Wednesday if you have any dietary requirements so I can inform the venue.\n\nLooking forward to it!\n\nCarol"
+  },
+  {
+    "category": "social",
+    "from": "eve@overmind.local",
+    "to": "carol@overmind.local",
+    "cc": "bob@overmind.local",
+    "subject": "Congratulations on the AWS Solutions Architect cert!",
+    "body": "Carol,\n\nJust saw your post about passing the AWS Solutions Architect Professional exam — congratulations! That's a tough one and well deserved.\n\nYour infrastructure knowledge has been invaluable on Project Meridian. The staging environment you built basically runs itself, which is exactly what we need as we scale into Phase 2.\n\nDrinks are on me at the team lunch on Friday.\n\nEve"
+  }
+]
