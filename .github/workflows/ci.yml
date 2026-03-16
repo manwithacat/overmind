@@ -10,7 +10,7 @@ jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -24,7 +24,7 @@ jobs:
   test-python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -42,7 +42,7 @@ jobs:
   build-rust:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - name: Cargo check
         run: cargo check --manifest-path services/stalwart-sieve-nats/Cargo.toml
@@ -58,7 +58,7 @@ jobs:
           - service: postgres
             context: config/postgres
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build Docker image
         run: |
           if [ "${{ matrix.service }}" = "postgres" ]; then
