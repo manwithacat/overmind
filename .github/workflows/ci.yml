@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install ruff mypy
+      - name: Ruff check
+        run: ruff check services/
+      - name: Ruff format check
+        run: ruff format --check services/
+
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: |
+          for svc in mail-bridge ingestion classifier graph-writer api; do
+            pip install -e "services/$svc[dev]"
+          done
+      - name: Run tests
+        run: |
+          for svc in mail-bridge ingestion classifier graph-writer api; do
+            pytest "services/$svc/tests/" -v
+          done
+
+  build-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cargo check
+        run: cargo check --manifest-path services/stalwart-sieve-nats/Cargo.toml
+      - name: Cargo test
+        run: cargo test --manifest-path services/stalwart-sieve-nats/Cargo.toml
+
+  docker-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [mail-bridge, ingestion, classifier, graph-writer, api]
+        include:
+          - service: postgres
+            context: config/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          if [ "${{ matrix.service }}" = "postgres" ]; then
+            docker build -t test-${{ matrix.service }} ${{ matrix.context }}
+          else
+            docker build -t test-${{ matrix.service }} services/${{ matrix.service }}
+          fi
