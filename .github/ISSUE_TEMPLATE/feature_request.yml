@@ -1,0 +1,35 @@
+name: Feature Request
+description: Suggest a feature for OVERMIND Mail
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use Case
+      description: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Approach
+      description: How do you think this should work?
+    validations:
+      required: true
+  - type: dropdown
+    id: spec-section
+    attributes:
+      label: Related Spec Section
+      description: Which area of the system does this relate to?
+      options:
+        - Mail Server (Stalwart)
+        - Ingestion Pipeline
+        - LLM Classifier
+        - Graph / Intelligence Store
+        - API
+        - Dashboard (Phase 3)
+        - Deployment / Infrastructure
+        - Other
+    validations:
+      required: true
