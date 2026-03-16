@@ -1,10 +1,10 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
-class MessageDirection(str, Enum):
+class MessageDirection(StrEnum):
     inbound = "inbound"
     outbound = "outbound"
     internal = "internal"

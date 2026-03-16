@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class MessageType(str, Enum):
+class MessageType(StrEnum):
     decision = "decision"
     request = "request"
     status_update = "status_update"
@@ -13,20 +13,20 @@ class MessageType(str, Enum):
     unknown = "unknown"
 
 
-class ActionUrgency(str, Enum):
+class ActionUrgency(StrEnum):
     immediate = "immediate"
     this_week = "this_week"
     no_deadline = "no_deadline"
 
 
-class ThreadRole(str, Enum):
+class ThreadRole(StrEnum):
     initiating = "initiating"
     contributing = "contributing"
     closing = "closing"
     noise = "noise"
 
 
-class SentimentValence(str, Enum):
+class SentimentValence(StrEnum):
     positive = "positive"
     neutral = "neutral"
     negative = "negative"
