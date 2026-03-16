@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def test_normalised_message_valid():
@@ -15,7 +15,7 @@ def test_normalised_message_valid():
         body_hash="abc123",
         has_attachments=False,
         attachment_types=[],
-        received_at=datetime.now(timezone.utc),
+        received_at=datetime.now(UTC),
         direction=MessageDirection.internal,
     )
     assert msg.message_id == "<abc123@overmind.example.com>"
@@ -40,6 +40,6 @@ def test_normalised_message_rejects_invalid_direction():
             body_hash="z",
             has_attachments=False,
             attachment_types=[],
-            received_at=datetime.now(timezone.utc),
+            received_at=datetime.now(UTC),
             direction="invalid",
         )

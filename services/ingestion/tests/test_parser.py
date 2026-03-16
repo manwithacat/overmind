@@ -1,7 +1,5 @@
 """Tests for the EML parser module."""
 
-from datetime import datetime, timezone
-
 
 def test_parse_simple_eml():
     from overmind_ingestion.parser import parse_eml

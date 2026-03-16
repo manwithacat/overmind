@@ -5,7 +5,7 @@ import email.policy
 import email.utils
 import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from bs4 import BeautifulSoup
 
@@ -70,9 +70,9 @@ def _parse_date(date_str: str | None) -> datetime:
     if date_str:
         parsed = email.utils.parsedate_to_datetime(date_str)
         if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
+            parsed = parsed.replace(tzinfo=UTC)
         return parsed
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _determine_direction(
@@ -80,9 +80,7 @@ def _determine_direction(
 ) -> MessageDirection:
     """Determine message direction based on sender/recipient domains."""
     sender_internal = sender.endswith(f"@{local_domain}")
-    all_recipients_internal = all(
-        r.endswith(f"@{local_domain}") for r in recipients
-    )
+    all_recipients_internal = all(r.endswith(f"@{local_domain}") for r in recipients)
 
     if sender_internal and all_recipients_internal:
         return MessageDirection.internal
@@ -107,9 +105,7 @@ def parse_eml(raw: bytes) -> NormalisedMessage:
 
     # Subject normalisation — strip Re:/Fwd: prefixes
     subject = msg.get("Subject", "")
-    subject = re.sub(
-        r"^(Re|Fwd|Fw)\s*:\s*", "", subject, flags=re.IGNORECASE
-    ).strip()
+    subject = re.sub(r"^(Re|Fwd|Fw)\s*:\s*", "", subject, flags=re.IGNORECASE).strip()
 
     message_id = msg.get("Message-ID", "")
     thread_id = msg.get("In-Reply-To") or msg.get("References") or None
@@ -122,8 +118,7 @@ def parse_eml(raw: bytes) -> NormalisedMessage:
     direction = _determine_direction(sender, recipients)
 
     return NormalisedMessage(
-        message_id=message_id
-        or f"<generated-{body_hash[:8]}@overmind>",
+        message_id=message_id or f"<generated-{body_hash[:8]}@overmind>",
         thread_id=thread_id if thread_id != message_id else None,
         sender=sender,
         recipients=recipients,

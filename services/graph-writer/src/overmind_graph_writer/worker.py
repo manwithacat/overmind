@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import os
@@ -39,7 +38,7 @@ async def process_result(data: dict, conn) -> None:
     async with conn.cursor() as cur:
         # Set AGE search path
         await cur.execute("LOAD 'age';")
-        await cur.execute("SET search_path = ag_catalog, \"$user\", public;")
+        await cur.execute('SET search_path = ag_catalog, "$user", public;')
 
         # Upsert sender Person node
         await cur.execute(upsert_person_cypher(sender, sender_name, sender_domain, is_internal))
@@ -55,29 +54,35 @@ async def process_result(data: dict, conn) -> None:
             await cur.execute(upsert_sent_to_cypher(sender, recipient, density))
 
         # Insert classification into relational table
-        await cur.execute(insert_classification_query(), {
-            "message_id": message_id,
-            "message_type": classification["message_type"],
-            "information_density": classification["information_density"],
-            "action_required": classification["action_required"],
-            "action_urgency": classification.get("action_urgency"),
-            "automation_candidate": classification["automation_candidate"],
-            "automation_type": classification.get("automation_type"),
-            "thread_role": classification["thread_role"],
-            "key_entities": classification.get("key_entities", []),
-            "sentiment_valence": classification["sentiment_valence"],
-            "confidence": classification["confidence"],
-        })
+        await cur.execute(
+            insert_classification_query(),
+            {
+                "message_id": message_id,
+                "message_type": classification["message_type"],
+                "information_density": classification["information_density"],
+                "action_required": classification["action_required"],
+                "action_urgency": classification.get("action_urgency"),
+                "automation_candidate": classification["automation_candidate"],
+                "automation_type": classification.get("automation_type"),
+                "thread_role": classification["thread_role"],
+                "key_entities": classification.get("key_entities", []),
+                "sentiment_valence": classification["sentiment_valence"],
+                "confidence": classification["confidence"],
+            },
+        )
 
         # Update attention cost metric
         recipient_count = len(recipients)
         cost = recipient_count * (1.0 - density)
-        await cur.execute(upsert_attention_cost_query(), {
-            "email": sender,
-            "display_name": sender_name,
-            "cost": cost,
-            "density": density,
-        })
+        await cur.execute(
+            upsert_attention_cost_query(),
+            {
+                "email": sender,
+                "display_name": sender_name,
+                "cost": cost,
+                "density": density,
+            },
+        )
 
     await conn.commit()
     logger.info("Wrote graph data for message %s", message_id)

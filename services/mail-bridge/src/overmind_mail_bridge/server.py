@@ -3,7 +3,7 @@ import logging
 import os
 
 import nats
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Response
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ NATS_TIMEOUT = float(os.environ.get("NATS_TIMEOUT", "5"))
 
 class WebhookPayload(BaseModel):
     """Stalwart webhook payload for message delivery events."""
+
     event: str
     message: str  # Raw EML content
 

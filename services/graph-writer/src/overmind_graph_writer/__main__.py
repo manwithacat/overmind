@@ -6,6 +6,7 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     from .worker import run
+
     asyncio.run(run())
 
 

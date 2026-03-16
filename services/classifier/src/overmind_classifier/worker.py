@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import os
@@ -124,7 +123,11 @@ async def run():
                     }
                     await js.publish("mail.analysis.results", json.dumps(output).encode())
                     await msg.ack()
-                    logger.info("Classified message %s as %s", payload["message_id"], result.message_type)
+                    logger.info(
+                        "Classified message %s as %s",
+                        payload["message_id"],
+                        result.message_type,
+                    )
                 except Exception:
                     logger.exception("Failed to classify message")
                     try:

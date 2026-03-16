@@ -1,6 +1,5 @@
 """NATS JetStream worker — consumes from MAIL stream, normalises, publishes to ANALYSIS."""
 
-import asyncio
 import logging
 import os
 

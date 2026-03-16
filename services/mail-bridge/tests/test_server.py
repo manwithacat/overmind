@@ -11,9 +11,7 @@ os.environ.setdefault("NATS_TIMEOUT", "1")
 async def test_health_endpoint():
     from overmind_mail_bridge.server import app
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
@@ -23,13 +21,14 @@ async def test_health_endpoint():
 async def test_webhook_accepts_valid_payload():
     from overmind_mail_bridge.server import app
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
-        resp = await client.post("/webhook", json={
-            "event": "store.ingest",
-            "message": "From: alice@test\nTo: bob@test\nSubject: Hi\n\nHello",
-        })
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(
+            "/webhook",
+            json={
+                "event": "store.ingest",
+                "message": "From: alice@test\nTo: bob@test\nSubject: Hi\n\nHello",
+            },
+        )
     assert resp.status_code == 200
     assert resp.json()["status"] == "accepted"
 
@@ -38,8 +37,6 @@ async def test_webhook_accepts_valid_payload():
 async def test_webhook_rejects_invalid_payload():
     from overmind_mail_bridge.server import app
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post("/webhook", json={"invalid": "data"})
     assert resp.status_code == 422

@@ -14,6 +14,7 @@ async def lifespan(app: FastAPI):
     # Startup: try to init DB pool, but don't fail if DB isn't available
     try:
         from .db import init_pool
+
         await init_pool()
         logger.info("Database pool initialized")
     except Exception:
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     try:
         from .db import close_pool
+
         await close_pool()
     except Exception:
         pass

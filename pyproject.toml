@@ -12,6 +12,11 @@ src = ["services/*/src"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
+[tool.ruff.lint.per-file-ignores]
+# Prompt strings and SQL queries contain long lines by design
+"services/classifier/src/overmind_classifier/prompts.py" = ["E501"]
+"services/graph-writer/src/overmind_graph_writer/queries.py" = ["E501"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
