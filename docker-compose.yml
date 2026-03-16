@@ -68,11 +68,100 @@ services:
     depends_on:
       stalwart:
         condition: service_healthy
+      api:
+        condition: service_healthy
     networks:
       - overmind-net
 
-  # === Application Services (added in subsequent chunks) ===
-  # mail-bridge, ingestion, classifier, graph-writer, api, seed
+  # === Application Services ===
+
+  mail-bridge:
+    build: ./services/mail-bridge
+    ports:
+      - "8025:8025"
+    environment:
+      NATS_URL: ${NATS_URL}
+    depends_on:
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8025/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - overmind-net
+
+  ingestion:
+    build: ./services/ingestion
+    environment:
+      NATS_URL: ${NATS_URL}
+    depends_on:
+      nats:
+        condition: service_healthy
+    networks:
+      - overmind-net
+
+  classifier:
+    build: ./services/classifier
+    environment:
+      NATS_URL: ${NATS_URL}
+      OVERMIND_LLM_PROVIDER: ${OVERMIND_LLM_PROVIDER}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      nats:
+        condition: service_healthy
+    networks:
+      - overmind-net
+
+  graph-writer:
+    build: ./services/graph-writer
+    environment:
+      NATS_URL: ${NATS_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+    depends_on:
+      nats:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - overmind-net
+
+  api:
+    build: ./services/api
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - overmind-net
+
+  seed:
+    build: ./scripts
+    depends_on:
+      stalwart:
+        condition: service_healthy
+      mail-bridge:
+        condition: service_healthy
+    networks:
+      - overmind-net
+    profiles:
+      - seed
 
 networks:
   overmind-net:
