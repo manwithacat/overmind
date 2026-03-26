@@ -19,9 +19,12 @@ The model MUST run entirely on-premises or within the operator's cloud boundary.
 
 ## Inference Runtime
 
-- **Ollama** (MIT licence, latest stable)
-- Supports CUDA 11.8+ (CUDA 12.x recommended)
-- Supports CPU-only fallback
+- **LangChain** abstraction layer — supports multiple providers via a single interface
+- Production: **Ollama** (MIT licence, latest stable) for on-premises inference
+  - Supports CUDA 11.8+ (CUDA 12.x recommended)
+  - Supports CPU-only fallback
+- Development: configurable to use Anthropic, OpenAI, or other remote providers via `LLM_MODEL` environment variable
+- Provider configured at deployment time — no code changes required to switch
 
 ## Classification Prompt Design
 

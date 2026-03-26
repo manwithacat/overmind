@@ -37,10 +37,11 @@ A working mail server with full MX, DKIM, IMAP, and web client. No intelligence 
 - DKIM signing on outbound
 - Verify delivery reputation (check blacklists, test with mail-tester.com)
 
-### 1.6 Sieve Plugin Skeleton
-- Implement Stalwart Sieve extension skeleton for NATS emission
-- **No NATS deployed yet** — log to local file as placeholder
-- Validate that Sieve hook fires on message delivery
+### 1.6 Webhook Integration Skeleton
+- Configure Stalwart `store.ingest` webhook to POST to mail-bridge
+- Deploy mail-bridge service (FastAPI, port 8025)
+- **No NATS deployed yet** — mail-bridge logs webhook payloads as placeholder
+- Validate that webhook fires on every message delivery
 - Ensure it does not affect delivery latency or reliability
 
 ## Acceptance Criteria
@@ -49,5 +50,5 @@ A working mail server with full MX, DKIM, IMAP, and web client. No intelligence 
 - [ ] DKIM/SPF/DMARC all passing
 - [ ] Web client accessible via HTTPS
 - [ ] IMAP access works from third-party clients
-- [ ] Sieve plugin logs message events to file on every delivery
+- [ ] Webhook fires and mail-bridge receives events on every delivery
 - [ ] S3 storage backend operational

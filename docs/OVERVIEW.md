@@ -33,7 +33,7 @@ Five independently deployable containerised layers, communicating via NATS JetSt
 |-------|---------------|---------------|
 | MX/SMTP | Receive/deliver mail, DKIM/SPF/DMARC | Stalwart Mail Server |
 | Client Interface | Web, mobile, IMAP/SMTP access | Roundcube Next / Snappymail + React Native |
-| Ingestion Pipeline | Parse, normalise, enqueue for LLM | Python (FastAPI + Celery + Redis) |
+| Ingestion Pipeline | Parse, normalise, enqueue for LLM | Python (asyncio + NATS JetStream) |
 | LLM Analysis Engine | Classify, score, extract structured data | Ollama + Mistral 7B / Llama 3 (local) |
 | Intelligence Store & API | Graph, metrics, dashboard API | PostgreSQL + Apache AGE + FastAPI |
 

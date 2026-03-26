@@ -5,6 +5,7 @@
 - Written in Rust (memory-safe, high throughput)
 - Unified SMTP/IMAP/POP3/JMAP server
 - Native Sieve scripting with extension support
+- Built-in webhook engine for event-driven integrations
 - Actively maintained, AGPL-3.0
 
 ## Required Capabilities
@@ -18,26 +19,40 @@
 | DKIM signing | Outbound mail — RSA-2048 or Ed25519 |
 | SPF validation | Inbound |
 | DMARC validation | Inbound |
-| Sieve scripting | Execute at delivery time — used to emit copy to NATS |
+| Webhook engine | Emit events on message delivery to external HTTP endpoint |
 | S3 storage backend | S3-compatible mail storage (MinIO self-hosted or cloud S3) |
 
-## NATS Emission via Sieve
+## NATS Emission via Webhook + mail-bridge
 
-A custom Sieve action `sieve_nats_emit` is implemented as a Stalwart plugin (Rust) registered as a Sieve extension.
+Stalwart's built-in webhook engine fires a `store.ingest` event on every message delivery. The `mail-bridge` service (FastAPI, port 8025) receives these webhooks and publishes the raw EML to NATS JetStream.
 
 ### Behaviour
 
-- Serialises message envelope and body to NATS JetStream
-- Publishes to stream `mail.inbound` (or `mail.outbound` for sent messages)
+- Stalwart POSTs webhook payload to `http://mail-bridge:8025/webhook`
+- mail-bridge extracts the message and publishes to NATS stream `mail.inbound` (or `mail.outbound`)
 - **Fire-and-forget** — delivery to recipient mailbox is NOT contingent on successful NATS emission
-- NATS failure must not block or delay mail delivery
+- Webhook failure does not block or delay mail delivery
 
-### Implementation Notes
+### Why Webhooks Instead of Sieve
 
-- Plugin must be written in Rust as a Stalwart Sieve extension
-- Must handle NATS connection failures gracefully (log and skip)
-- Must serialise full EML including all headers
-- Consider backpressure: if NATS is unreachable for extended period, log to local file as fallback
+The original spec described a custom Rust Sieve extension (`sieve_nats_emit`). Stalwart v0.10 does not expose a public plugin API for Sieve extensions, making this approach impractical without forking Stalwart (triggering AGPL obligations). The webhook approach:
+
+- Uses Stalwart's built-in, supported webhook engine
+- Requires no Stalwart source modification
+- Is simpler to operate and debug (HTTP vs. embedded plugin)
+- Achieves identical fire-and-forget semantics
+
+A skeleton Rust crate (`stalwart-sieve-nats`) exists in the repo for future use if Stalwart exposes a plugin API.
+
+### Configuration
+
+Webhook configured in `config/stalwart/config.toml`:
+
+```toml
+[webhook."nats-bridge"]
+url = "http://mail-bridge:8025/webhook"
+events = ["store.ingest"]
+```
 
 ## Version Target
 

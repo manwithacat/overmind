@@ -12,31 +12,34 @@
 ```
 1. RECEIPT
    Stalwart receives SMTP → validates SPF/DKIM/DMARC → delivers to mailbox
-   Simultaneously: Sieve plugin emits raw message (headers + body) to NATS stream `mail.inbound`
+   Simultaneously: Stalwart webhook (store.ingest) POSTs raw message to mail-bridge
+   mail-bridge publishes to NATS stream `mail.inbound`
    Emission is fire-and-forget — mailbox delivery is NOT contingent on NATS success
 
 2. NORMALISATION
-   Python Celery worker consumes from NATS →
+   Ingestion worker (asyncio) consumes from NATS `mail.inbound` →
    Parses EML (headers, MIME parts, attachment metadata) →
    Strips HTML to plain text →
    Truncates body to configurable token limit →
    Publishes normalised JSON to `mail.analysis.queue`
 
 3. LLM CLASSIFICATION
-   LLM Analysis Engine consumes normalised message →
-   Runs structured extraction prompt against local model →
+   Classifier worker consumes normalised message →
+   Runs structured extraction prompt via LangChain (local or remote model) →
    Returns JSON: message_type, information_density, action_required,
-   automation_candidate, thread_summary, key_entities →
+   automation_candidate, thread_role, key_entities →
    Validates against Pydantic schema →
-   Failures: logged + queued for retry with simplified prompt
+   Failures: logged + retried with simplified prompt, then DLQ
 
 4. GRAPH WRITE
    Classification output written to PostgreSQL via Apache AGE →
-   Nodes: persons (canonical identities), threads, topics →
-   Edges: SENT_TO, REPLIED_TO, CC'd, FORWARDED_TO (typed, weighted by frequency + recency)
+   Nodes: Person (canonical identities), Thread, Topic →
+   Edges: SENT_TO (typed, weighted by frequency + recency)
+   Classification also stored in relational table for fast lookup
 
 5. METRICS AGGREGATION
-   Scheduled job (every 15 minutes) updates materialised views:
+   Attention cost index updated incrementally per message (PoC)
+   Production: scheduled job (every 15 minutes) updates materialised views:
    - per-sender information density scores
    - attention cost index per recipient group
    - thread entropy metrics
@@ -49,26 +52,27 @@ Outbound messages follow an equivalent path initiated from the client layer.
 
 | Stream | Publisher | Consumer | Payload |
 |--------|-----------|----------|---------|
-| `mail.inbound` | Stalwart Sieve plugin | Ingestion Pipeline | Raw EML (headers + body) |
-| `mail.outbound` | Stalwart Sieve plugin | Ingestion Pipeline | Raw EML (headers + body) |
-| `mail.analysis.queue` | Ingestion Pipeline | LLM Analysis Engine | Normalised JSON message |
-| `mail.analysis.results` | LLM Analysis Engine | Graph Writer | Classification JSON output |
+| `mail.inbound` | mail-bridge (Stalwart webhook) | Ingestion worker | Raw EML (headers + body) |
+| `mail.outbound` | mail-bridge (Stalwart webhook) | Ingestion worker | Raw EML (headers + body) |
+| `mail.analysis.queue` | Ingestion worker | Classifier worker | Normalised JSON message |
+| `mail.analysis.results` | Classifier worker | Graph Writer | Classification JSON output |
 | `mail.analysis.dlq` | Any worker | Monitoring/retry | Failed messages (dead letter) |
 
 ## Layer Dependency Map
 
 ```
 Stalwart Mail Server
-  └─► NATS JetStream
-        └─► Ingestion Pipeline (Celery workers)
+  └─► Stalwart webhook (store.ingest event)
+        └─► mail-bridge (FastAPI, port 8025)
               └─► NATS JetStream
-                    └─► LLM Analysis Engine (Ollama)
+                    └─► Ingestion worker (asyncio)
                           └─► NATS JetStream
-                                └─► Graph Writer
-                                      └─► PostgreSQL + Apache AGE
-                                            └─► Materialised View Aggregation (cron)
-                                                  └─► Intelligence API (FastAPI)
-                                                        └─► Dashboard (React SPA)
+                                └─► Classifier worker (LangChain)
+                                      └─► NATS JetStream
+                                            └─► Graph Writer
+                                                  └─► PostgreSQL + Apache AGE
+                                                        └─► Intelligence API (FastAPI)
+                                                              └─► Dashboard (React SPA)
 
 Client Interface (Roundcube/Snappymail/Mobile)
   └─► Stalwart (IMAP/JMAP/SMTP)
