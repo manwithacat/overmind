@@ -2,8 +2,11 @@ import json
 import logging
 import os
 
-import litellm
 import nats
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from nats.js.api import ConsumerConfig, DeliverPolicy
 from pydantic import ValidationError
 
@@ -14,25 +17,56 @@ logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
 
+_PROVIDER_MAP: dict[str, type] = {
+    "anthropic": ChatAnthropic,
+    "openai": ChatOpenAI,
+    "ollama": ChatOllama,
+}
+
+
+def _build_chat_model(provider_string: str):
+    """Build a LangChain ChatModel from a 'provider/model' string.
+
+    Supports the same OVERMIND_LLM_PROVIDER format as before, e.g.
+    'anthropic/claude-sonnet-4-20250514' or 'ollama/mistral'.
+    """
+    parts = provider_string.split("/", 1)
+    if len(parts) != 2:
+        raise ValueError(
+            f"OVERMIND_LLM_PROVIDER must be 'provider/model', got: {provider_string}"
+        )
+    provider, model_name = parts
+
+    chat_cls = _PROVIDER_MAP.get(provider)
+    if chat_cls is None:
+        raise ValueError(
+            f"Unsupported provider '{provider}'. "
+            f"Supported: {', '.join(_PROVIDER_MAP)}"
+        )
+
+    return chat_cls(model=model_name, temperature=0.1)
+
+
+async def _call_llm(system_prompt: str, user_prompt: str) -> str:
+    """Send a system+user message pair to the configured LLM, return raw text."""
+    provider_string = os.environ.get(
+        "OVERMIND_LLM_PROVIDER", "anthropic/claude-sonnet-4-20250514"
+    )
+    llm = _build_chat_model(provider_string)
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt),
+    ]
+    response = await llm.ainvoke(messages)
+    return response.content
+
 
 async def classify_message(
     subject: str, body: str, sender: str, recipients: list[str]
 ) -> ClassificationOutput:
-    """Classify a single message via LiteLLM."""
-    model = os.environ.get("OVERMIND_LLM_PROVIDER", "anthropic/claude-sonnet-4-20250514")
+    """Classify a single message via LangChain."""
     user_prompt = build_user_prompt(subject, body, sender, recipients)
-
-    response = await litellm.acompletion(
-        model=model,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0.1,
-        response_format={"type": "json_object"},
-    )
-
-    raw_json = response.choices[0].message.content
+    raw_json = await _call_llm(SYSTEM_PROMPT, user_prompt)
     data = json.loads(raw_json)
     return ClassificationOutput(**data)
 
@@ -47,20 +81,8 @@ async def classify_with_retry(
         logger.warning("Full classification failed, trying simplified: %s", e)
 
     # Simplified fallback
-    model = os.environ.get("OVERMIND_LLM_PROVIDER", "anthropic/claude-sonnet-4-20250514")
     user_prompt = build_user_prompt(subject, body, sender, recipients)
-
-    response = await litellm.acompletion(
-        model=model,
-        messages=[
-            {"role": "system", "content": SIMPLIFIED_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0.1,
-        response_format={"type": "json_object"},
-    )
-
-    raw_json = response.choices[0].message.content
+    raw_json = await _call_llm(SIMPLIFIED_PROMPT, user_prompt)
     data = json.loads(raw_json)
     # Fill in defaults for missing fields
     data.setdefault("action_urgency", None)

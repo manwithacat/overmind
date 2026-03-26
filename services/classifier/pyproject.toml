@@ -9,7 +9,10 @@ requires-python = ">=3.12"
 dependencies = [
     "nats-py>=2.9.0",
     "pydantic>=2.0.0",
-    "litellm>=1.50.0",
+    "langchain-core>=0.3.0",
+    "langchain-anthropic>=0.3.0",
+    "langchain-openai>=0.3.0",
+    "langchain-ollama>=0.3.0",
 ]
 
 [project.optional-dependencies]
